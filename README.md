@@ -1,17 +1,20 @@
 # WhatsApp Urgency Classification using FastText
 
 A FastText-based text classification system for categorizing WhatsApp customer service messages into **urgent**, **normal**, and **non-urgent** classes.  
-The system is designed to help pharmacy staff prioritize incoming customer messages through real-time classification, queue monitoring, and urgent message notification.
+The system is designed to help pharmacy staff prioritize incoming customer messages through real-time classification, queue monitoring, urgent message notification, and reply status tracking.
 
 ## Features
 
 - WhatsApp message urgency classification using FastText
 - Text preprocessing and supervised model training
 - Flask REST API for real-time prediction
-- WhatsApp Gateway webhook integration
+- WhatsApp Gateway webhook integration for incoming messages
+- Baileys listener integration for detecting outgoing/manual replies
 - Queue-based monitoring dashboard
 - Urgent message notification
-- Ticket status tracking
+- Ticket grouping and status tracking
+- Quick link access to WhatsApp conversations
+- Real-time dashboard updates using Server-Sent Events
 - Model evaluation using accuracy, precision, recall, F1-score, and confusion matrix
 
 ## Tech Stack
@@ -23,7 +26,8 @@ The system is designed to help pharmacy staff prioritize incoming customer messa
 - SQLAlchemy
 - JavaScript
 - Tailwind CSS
-- WhatsApp Gateway
+- WhatsApp Gateway / Fonnte
+- Baileys
 - Server-Sent Events
 
 ## Model Performance
