@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login - Apotek K24 WhatsApp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'k24': {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/fontawesome-free/css/all.min.css') }}">
+</head>
+<body class="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(34,197,94,0.15),_transparent_45%),linear-gradient(135deg,_#f8fafc_0%,_#ecfdf5_45%,_#dcfce7_100%)] font-sans text-slate-800">
+    <div class="min-h-screen grid lg:grid-cols-2">
+        <section class="hidden lg:flex flex-col justify-between p-10 xl:p-14 bg-gradient-to-br from-k24-700 via-k24-600 to-emerald-400 text-white">
+            <div>
+                <div class="inline-flex items-center gap-3 rounded-2xl bg-white/15 px-4 py-3 backdrop-blur-sm">
+                    <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20">
+                        <i class="fas fa-pills text-lg"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold tracking-[0.2em] uppercase text-white/80">Apotek K24</p>
+                        <p class="text-xl font-bold">WA Monitor Kalibutuh</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="max-w-xl space-y-6">
+                <span class="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm font-medium">
+                    <i class="fas fa-shield-alt"></i> Akses admin internal
+                </span>
+                <h1 class="text-4xl xl:text-5xl font-extrabold leading-tight">Pantau antrean WhatsApp dan tangani pesan pelanggan dari satu dashboard.</h1>
+                <p class="text-base xl:text-lg text-white/85 leading-relaxed">Login diperlukan untuk membuka dashboard, antrean pesan, detail percakapan, dan endpoint internal aplikasi.</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 text-sm">
+                <div class="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
+                    <p class="text-white/70">Realtime</p>
+                    <p class="mt-1 font-semibold">SSE live update</p>
+                </div>
+                <div class="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
+                    <p class="text-white/70">Klasifikasi</p>
+                    <p class="mt-1 font-semibold">Urgent / Normal</p>
+                </div>
+                <div class="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
+                    <p class="text-white/70">Workflow</p>
+                    <p class="mt-1 font-semibold">Tangani sampai selesai</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="flex items-center justify-center p-6 sm:p-10">
+            <div class="w-full max-w-md">
+                <div class="mb-8 text-center lg:hidden">
+                    <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-k24-600 to-k24-800 text-white shadow-xl">
+                        <i class="fas fa-pills text-2xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold">Login Admin</h1>
+                    <p class="mt-2 text-sm text-slate-500">Masuk untuk membuka dashboard monitor WhatsApp.</p>
+                </div>
+
+                <div class="rounded-3xl border border-white/70 bg-white/90 p-6 shadow-2xl shadow-emerald-100 backdrop-blur-xl sm:p-8">
+                    <div class="mb-6 hidden lg:block">
+                        <p class="text-sm font-semibold uppercase tracking-[0.2em] text-k24-700">Secure Access</p>
+                        <h2 class="mt-2 text-3xl font-bold text-slate-900">Selamat datang kembali</h2>
+                        <p class="mt-2 text-sm text-slate-500">Gunakan kredensial admin untuk masuk ke panel monitor.</p>
+                    </div>
+
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="mb-4 rounded-2xl border px-4 py-3 text-sm {{ 'border-red-200 bg-red-50 text-red-700' if category == 'error' else 'border-emerald-200 bg-emerald-50 text-emerald-700' }}">
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="POST" class="space-y-5">
+                        <input type="hidden" name="next" value="{{ next_url }}">
+
+                        <div>
+                            <label for="email" class="mb-2 block text-sm font-semibold text-slate-700">Email</label>
+                            <div class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-k24-500 focus-within:bg-white">
+                                <i class="fas fa-envelope text-slate-400"></i>
+                                <input id="email"
+                                       name="email"
+                                       type="email"
+                                       required
+                                       value="{{ request.form.get('email', admin_email) }}"
+                                       class="w-full border-0 bg-transparent p-0 text-sm text-slate-800 outline-none placeholder:text-slate-400"
+                                       placeholder="Masukkan email admin">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="password" class="mb-2 block text-sm font-semibold text-slate-700">Password</label>
+                            <div class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 focus-within:border-k24-500 focus-within:bg-white">
+                                <i class="fas fa-lock text-slate-400"></i>
+                                <input id="password"
+                                       name="password"
+                                       type="password"
+                                       required
+                                       class="w-full border-0 bg-transparent p-0 text-sm text-slate-800 outline-none placeholder:text-slate-400"
+                                       placeholder="Masukkan password">
+                            </div>
+                        </div>
+
+                        <button type="submit"
+                                class="w-full rounded-2xl bg-gradient-to-r from-k24-600 to-k24-700 px-4 py-3.5 text-sm font-semibold text-white shadow-lg shadow-k24-200 transition hover:-translate-y-0.5 hover:shadow-xl">
+                            <i class="fas fa-right-to-bracket mr-2"></i> Masuk ke Dashboard
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>

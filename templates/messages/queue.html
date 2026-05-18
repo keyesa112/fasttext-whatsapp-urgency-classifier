@@ -1,0 +1,465 @@
+{% extends "base.html" %}
+
+{% block title %}Antrean Pesan{% endblock %}
+{% block page_title %}Antrean Pesan{% endblock %}
+
+{% block content %}
+
+<!-- Search Bar -->
+<div class="mb-5">
+    <div class="relative max-w-md">
+        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <i class="fas fa-search text-slate-400 text-sm"></i>
+        </span>
+        <input type="text"
+               id="search-input"
+               class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-k24-500 focus:border-transparent shadow-sm transition-all"
+               placeholder="Cari nomor HP / nama / kata kunci... (tekan Enter)">
+    </div>
+</div>
+
+<!-- Main Card -->
+<div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+
+    <!-- Intent Tabs -->
+    <div class="flex items-center gap-1 px-4 pt-4 pb-0 border-b border-slate-100 overflow-x-auto">
+        <button data-intent="urgent"
+                class="intent-tab flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-semibold whitespace-nowrap transition-all border-b-2 border-transparent text-slate-500 hover:text-red-600 hover:bg-red-50">
+            <i class="fas fa-exclamation-triangle text-red-400"></i>
+            <span class="hidden sm:inline">Urgent</span>
+            <span id="count-urgent" class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 bg-red-100 text-red-600 text-xs font-bold rounded-full">0</span>
+        </button>
+        <button data-intent="normal"
+                class="intent-tab flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-semibold whitespace-nowrap transition-all border-b-2 border-transparent text-slate-500 hover:text-amber-600 hover:bg-amber-50">
+            <i class="fas fa-info-circle text-amber-400"></i>
+            <span class="hidden sm:inline">Normal</span>
+            <span id="count-normal" class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 bg-amber-100 text-amber-600 text-xs font-bold rounded-full">0</span>
+        </button>
+        <button data-intent="non_urgent"
+                class="intent-tab flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-sm font-semibold whitespace-nowrap transition-all border-b-2 border-transparent text-slate-500 hover:text-emerald-600 hover:bg-emerald-50">
+            <i class="fas fa-check-circle text-emerald-400"></i>
+            <span class="hidden sm:inline">Non-Urgent</span>
+            <span id="count-non-urgent" class="inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 bg-emerald-100 text-emerald-600 text-xs font-bold rounded-full">0</span>
+        </button>
+    </div>
+
+    <div class="p-4 sm:p-5">
+
+        <!-- Status Filter -->
+        <div class="flex gap-2 mb-5 overflow-x-auto pb-1">
+            <button data-status="pending"
+                    class="status-btn flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap border-2 transition-all border-slate-200 bg-white text-slate-500 hover:border-amber-400 hover:text-amber-600">
+                <i class="fas fa-clock text-xs"></i>
+                <span class="hidden sm:inline">Belum Ditangani</span>
+                <span class="sm:hidden">Belum</span>
+            </button>
+            <button data-status="in_progress"
+                    class="status-btn flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap border-2 transition-all border-slate-200 bg-white text-slate-500 hover:border-blue-400 hover:text-blue-600">
+                <i class="fas fa-spinner text-xs"></i>
+                <span class="hidden sm:inline">Sedang Ditangani</span>
+                <span class="sm:hidden">Sedang</span>
+            </button>
+            <button data-status="completed"
+                    class="status-btn flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold whitespace-nowrap border-2 transition-all border-slate-200 bg-white text-slate-500 hover:border-emerald-400 hover:text-emerald-600">
+                <i class="fas fa-check text-xs"></i>
+                Selesai
+            </button>
+        </div>
+
+        <!-- Desktop Table -->
+        <div class="hidden lg:block overflow-x-auto rounded-xl border border-slate-100">
+            <table class="w-full text-[15px]">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-100">
+                        <th class="text-left text-sm font-semibold text-slate-500 uppercase tracking-wide px-4 py-3.5 w-8">#</th>
+                        <th class="text-left text-sm font-semibold text-slate-500 uppercase tracking-wide px-4 py-3.5">Waktu</th>
+                        <th class="text-left text-sm font-semibold text-slate-500 uppercase tracking-wide px-4 py-3.5">Pelanggan</th>
+                        <th class="text-left text-sm font-semibold text-slate-500 uppercase tracking-wide px-4 py-3.5">Preview Pesan</th>
+                        <th class="text-left text-sm font-semibold text-slate-500 uppercase tracking-wide px-4 py-3.5">Confidence</th>
+                        <th class="text-left text-sm font-semibold text-slate-500 uppercase tracking-wide px-4 py-3.5">Status</th>
+                        <th class="text-left text-sm font-semibold text-slate-500 uppercase tracking-wide px-4 py-3.5">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="queue-tbody" class="divide-y divide-slate-50">
+                    <tr>
+                        <td colspan="7" class="text-center text-slate-400 py-12">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>
+                            Memuat data...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Mobile Cards -->
+        <div id="queue-cards" class="lg:hidden space-y-3">
+            <div class="text-center text-slate-400 py-10">
+                <i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>
+                Memuat data...
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="flex items-center justify-center gap-1 mt-5"></div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentIntent = 'urgent';
+let currentStatus = 'pending';
+let currentPage   = 1;
+let searchQuery   = '';
+
+const intentCfg = {
+    urgent:     { badge: 'bg-red-100 text-red-700',         border: 'border-l-red-500' },
+    normal:     { badge: 'bg-amber-100 text-amber-700',     border: 'border-l-amber-400' },
+    non_urgent: { badge: 'bg-emerald-100 text-emerald-700', border: 'border-l-emerald-500' },
+};
+const statusCfg = {
+    pending:     { badge: 'bg-amber-100 text-amber-700',     label: 'Belum' },
+    in_progress: { badge: 'bg-blue-100 text-blue-700',       label: 'Sedang' },
+    completed:   { badge: 'bg-emerald-100 text-emerald-700', label: 'Selesai' },
+};
+
+function badgeTW(cfgMap, key) {
+    const c = cfgMap[key] || { badge: 'bg-slate-100 text-slate-500', label: key };
+    return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${c.badge}">${c.label}</span>`;
+}
+
+// ===== ACTIVE STATE =====
+const intentActiveClass = {
+    urgent:     'border-red-500 text-red-600 bg-red-50',
+    normal:     'border-amber-400 text-amber-600 bg-amber-50',
+    non_urgent: 'border-emerald-500 text-emerald-600 bg-emerald-50',
+};
+const statusActiveClass = {
+    pending:     'border-amber-400 bg-amber-50 text-amber-700',
+    in_progress: 'border-blue-400 bg-blue-50 text-blue-700',
+    completed:   'border-emerald-500 bg-emerald-50 text-emerald-700',
+};
+
+function setActiveIntent(intent) {
+    document.querySelectorAll('.intent-tab').forEach(btn => {
+        btn.classList.remove(
+            'border-red-500','text-red-600','bg-red-50',
+            'border-amber-400','text-amber-600','bg-amber-50',
+            'border-emerald-500','text-emerald-600','bg-emerald-50'
+        );
+        btn.classList.add('border-transparent','text-slate-500');
+    });
+    const active = document.querySelector(`.intent-tab[data-intent="${intent}"]`);
+    if (active) {
+        active.classList.remove('border-transparent','text-slate-500');
+        active.classList.add(...intentActiveClass[intent].split(' '));
+    }
+}
+
+function setActiveStatus(status) {
+    document.querySelectorAll('.status-btn').forEach(btn => {
+        btn.classList.remove(
+            'border-amber-400','bg-amber-50','text-amber-700',
+            'border-blue-400','bg-blue-50','text-blue-700',
+            'border-emerald-500','bg-emerald-50','text-emerald-700'
+        );
+        btn.classList.add('border-slate-200','bg-white','text-slate-500');
+    });
+    const active = document.querySelector(`.status-btn[data-status="${status}"]`);
+    if (active) {
+        active.classList.remove('border-slate-200','bg-white','text-slate-500');
+        active.classList.add(...statusActiveClass[status].split(' '));
+    }
+}
+
+// ===== EVENT LISTENERS =====
+document.querySelectorAll('.intent-tab').forEach(btn => {
+    btn.addEventListener('click', function() {
+        currentIntent = this.dataset.intent;
+        currentPage   = 1;
+        setActiveIntent(currentIntent);
+        loadQueue();
+    });
+});
+
+document.querySelectorAll('.status-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        currentStatus = this.dataset.status;
+        currentPage   = 1;
+        setActiveStatus(currentStatus);
+        loadQueue();
+    });
+});
+
+$('#search-input').keypress(function(e) {
+    if (e.which === 13) {
+        e.preventDefault();
+        searchQuery = $(this).val().trim();
+        currentPage = 1;
+        $(this).blur();
+        loadQueue();
+    }
+});
+
+// ===== LOAD QUEUE =====
+async function loadQueue() {
+    document.getElementById('queue-tbody').innerHTML = `
+        <tr><td colspan="7" class="text-center text-slate-400 py-12">
+            <i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Memuat data...
+        </td></tr>`;
+    document.getElementById('queue-cards').innerHTML = `
+        <div class="text-center text-slate-400 py-10">
+            <i class="fas fa-spinner fa-spin text-2xl mb-2 block"></i>Memuat data...
+        </div>`;
+
+    try {
+        let url = `/api/messages/queue?intent=${currentIntent}&status=${currentStatus}&page=${currentPage}`;
+        if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
+
+        const res  = await fetch(url);
+        const data = await res.json();
+
+        const tbody = document.getElementById('queue-tbody');
+        const cards = document.getElementById('queue-cards');
+
+        if (data.messages.length === 0) {
+            const emptyHTML = `
+                <div class="text-center text-slate-400 py-12">
+                    <i class="fas fa-inbox text-4xl mb-3 block text-slate-300"></i>
+                    <p class="font-medium text-slate-500">Tidak ada pesan ditemukan</p>
+                    ${searchQuery ? `<p class="text-sm mt-1">Hasil pencarian: "<strong>${searchQuery}</strong>"</p>` : ''}
+                </div>`;
+            tbody.innerHTML = `<tr><td colspan="7">${emptyHTML}</td></tr>`;
+            cards.innerHTML = emptyHTML;
+            document.getElementById('pagination').innerHTML = '';
+            return;
+        }
+
+        // Desktop Table
+        tbody.innerHTML = data.messages.map((msg, idx) => {
+            const actionBtn = msg.status === 'pending'
+                ? `<button onclick="markInProgress(${msg.id})"
+                           class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                       <i class="fas fa-play text-[10px]"></i> Tangani
+                   </button>`
+                : msg.status === 'in_progress'
+                ? `<button onclick="markCompleted(${msg.customer.id})"
+                           class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                       <i class="fas fa-check text-[10px]"></i> Selesai
+                   </button>`
+                : `<i class="fas fa-check-circle text-emerald-400 text-lg"></i>`;
+
+            return `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-4 py-3.5 text-sm font-medium text-slate-400">${(currentPage-1)*20+idx+1}</td>
+                    <td class="px-4 py-3.5 text-sm font-medium text-slate-600 whitespace-nowrap">
+                        <i class="fas fa-clock text-slate-300 mr-1"></i>
+                        ${new Date(msg.timestamp).toLocaleString('id-ID', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}
+                    </td>
+                    <td class="px-4 py-3.5">
+                        <p class="font-semibold text-slate-800 text-base">${msg.customer.name}</p>
+                        <p class="text-sm text-slate-500 mt-0.5">${msg.customer.phone}</p>
+                        ${msg.message_count > 1
+                            ? `<span class="inline-flex items-center mt-1.5 px-2.5 py-0.5 rounded-full text-sm font-semibold bg-blue-100 text-blue-700">${msg.message_count} pesan</span>`
+                            : ''}
+                    </td>
+                    <td class="px-4 py-3.5 text-sm leading-relaxed text-slate-700 max-w-[240px] truncate">${msg.message_text}</td>
+                    <td class="px-4 py-3.5">
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-sky-100 text-sky-700">
+                            ${(msg.confidence * 100).toFixed(1)}%
+                        </span>
+                    </td>
+                    <td class="px-4 py-3.5">${badgeTW(statusCfg, msg.status)}</td>
+                    <td class="px-4 py-3.5">
+                        <div class="flex items-center gap-1.5">
+                            <a href="/messages/detail/${msg.id}"
+                               class="inline-flex items-center gap-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-semibold rounded-lg transition-colors">
+                                <i class="fas fa-eye text-xs"></i>
+                            </a>
+                            ${actionBtn}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        // Mobile Cards
+        cards.innerHTML = data.messages.map(msg => {
+            const ic = intentCfg[msg.intent] || intentCfg.non_urgent;
+            const sc = statusCfg[msg.status] || { badge: 'bg-slate-100 text-slate-500', label: msg.status };
+
+            const actionBtn = msg.status === 'pending'
+                ? `<button onclick="markInProgress(${msg.id})"
+                           class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                       <i class="fas fa-play text-[10px]"></i> Tangani
+                   </button>`
+                : msg.status === 'in_progress'
+                ? `<button onclick="markCompleted(${msg.customer.id})"
+                           class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors">
+                       <i class="fas fa-check text-[10px]"></i> Selesai
+                   </button>`
+                : '';
+
+            return `
+                <div class="bg-white border-l-4 ${ic.border} border border-slate-100 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <p class="font-semibold text-slate-800 text-base">
+                                <i class="fas fa-user text-slate-400 mr-1 text-xs"></i>${msg.customer.name}
+                            </p>
+                            <p class="text-sm text-slate-500 mt-0.5">${msg.customer.phone}</p>
+                        </div>
+                        <div class="flex flex-col items-end gap-1">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-semibold ${sc.badge}">${sc.label}</span>
+                            ${msg.message_count > 1
+                                ? `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-semibold bg-blue-100 text-blue-700">${msg.message_count} pesan</span>`
+                                : ''}
+                        </div>
+                    </div>
+                    <p class="text-sm leading-relaxed text-slate-700 bg-slate-50 rounded-lg px-3 py-2.5 mb-3 break-words">${msg.message_text}</p>
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-sm text-slate-500">
+                            <i class="fas fa-clock mr-1"></i>
+                            ${new Date(msg.timestamp).toLocaleString('id-ID', {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'})}
+                        </span>
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-sky-100 text-sky-700">
+                            ${(msg.confidence * 100).toFixed(1)}%
+                        </span>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="/messages/detail/${msg.id}"
+                           class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-semibold rounded-lg transition-colors">
+                            <i class="fas fa-eye text-xs"></i> Detail
+                        </a>
+                        ${actionBtn}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        updateCounts();
+        renderPagination(data.total, data.page, data.per_page);
+
+    } catch (error) {
+        console.error('Error:', error);
+        showToast({ type: 'danger', title: 'Error', body: 'Gagal memuat antrean' });
+    }
+}
+
+// ===== UPDATE COUNTS =====
+async function updateCounts() {
+    try {
+        const [ur, nr, nur] = await Promise.all([
+            fetch('/api/messages/queue?intent=urgent&status=pending&per_page=1'),
+            fetch('/api/messages/queue?intent=normal&status=pending&per_page=1'),
+            fetch('/api/messages/queue?intent=non_urgent&status=pending&per_page=1'),
+        ]);
+        const [u, n, nu] = await Promise.all([ur.json(), nr.json(), nur.json()]);
+        document.getElementById('count-urgent').textContent     = u.total;
+        document.getElementById('count-normal').textContent     = n.total;
+        document.getElementById('count-non-urgent').textContent = nu.total;
+    } catch (e) { console.error('Error updating counts:', e); }
+}
+
+// ===== MARK IN PROGRESS =====
+async function markInProgress(messageId) {
+    if (!confirm('Tandai sedang ditangani?')) return;
+    try {
+        const msgData = await (await fetch(`/api/messages/${messageId}`)).json();
+        const res = await fetch(`/api/messages/customer/${msgData.customer.id}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'in_progress' })
+        });
+        if (res.ok) {
+            const result = await res.json();
+            currentStatus = 'in_progress';
+            setActiveStatus('in_progress');
+            showToast({ type: 'success', title: 'Berhasil!', body: `${result.updated_count || ''} pesan → Sedang Ditangani` });
+            // SSE akan trigger loadQueue() otomatis via onSSEMessage
+        }
+    } catch (e) {
+        showToast({ type: 'danger', title: 'Error', body: 'Gagal update status' });
+    }
+}
+
+// ===== MARK COMPLETED =====
+async function markCompleted(customerId) {
+    if (!confirm('Tandai semua pesan customer ini selesai?')) return;
+    try {
+        const res = await fetch(`/api/messages/customer/${customerId}/status`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'completed' })
+        });
+        if (res.ok) {
+            const result = await res.json();
+            currentStatus = 'completed';
+            setActiveStatus('completed');
+            showToast({ type: 'success', title: 'Selesai!', body: `${result.updated_count || ''} pesan diselesaikan` });
+            // SSE akan trigger loadQueue() otomatis via onSSEMessage
+        }
+    } catch (e) {
+        showToast({ type: 'danger', title: 'Error', body: 'Gagal tandai selesai' });
+    }
+}
+
+// ===== PAGINATION =====
+function renderPagination(total, page, perPage) {
+    const totalPages = Math.ceil(total / perPage);
+    const el = document.getElementById('pagination');
+    if (totalPages <= 1) { el.innerHTML = ''; return; }
+
+    const btnBase     = 'inline-flex items-center justify-center w-9 h-9 rounded-xl text-sm font-semibold transition-all';
+    const btnNormal   = `${btnBase} bg-white border border-slate-200 text-slate-600 hover:bg-slate-50`;
+    const btnActive   = `${btnBase} bg-k24-600 text-white shadow-md`;
+    const btnDisabled = `${btnBase} bg-slate-50 border border-slate-100 text-slate-300 cursor-not-allowed`;
+
+    let html = '';
+    html += `<button onclick="goToPage(${page-1})" ${page===1?'disabled':''} class="${page===1?btnDisabled:btnNormal}">
+                <i class="fas fa-chevron-left text-xs"></i>
+             </button>`;
+
+    const start = Math.max(1, page-2);
+    const end   = Math.min(totalPages, page+2);
+
+    if (start > 1) html += `<button onclick="goToPage(1)" class="${btnNormal}">1</button>`;
+    if (start > 2) html += `<span class="text-slate-300 px-1">…</span>`;
+
+    for (let i = start; i <= end; i++) {
+        html += `<button onclick="goToPage(${i})" class="${i===page?btnActive:btnNormal}">${i}</button>`;
+    }
+
+    if (end < totalPages-1) html += `<span class="text-slate-300 px-1">…</span>`;
+    if (end < totalPages)   html += `<button onclick="goToPage(${totalPages})" class="${btnNormal}">${totalPages}</button>`;
+
+    html += `<button onclick="goToPage(${page+1})" ${page===totalPages?'disabled':''} class="${page===totalPages?btnDisabled:btnNormal}">
+                <i class="fas fa-chevron-right text-xs"></i>
+             </button>`;
+
+    el.innerHTML = html;
+}
+
+function goToPage(page) {
+    currentPage = page;
+    loadQueue();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ===== SSE HOOK =====
+window.onSSEMessage = function(eventType, data) {
+    if (eventType === 'new_message' || eventType === 'status_changed') {
+        loadQueue();
+        updateCounts();
+    }
+};
+
+// ===== INIT =====
+$(document).ready(() => {
+    setActiveIntent('urgent');
+    setActiveStatus('pending');
+    loadQueue();
+});
+</script>
+{% endblock %}

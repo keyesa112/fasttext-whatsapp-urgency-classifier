@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Dashboard{% endblock %} - Apotek K24 WhatsApp</title>
+
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#16a34a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="K24 Monitor">
+    <link rel="apple-touch-icon" href="/static/img/apotek-icon-192.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        k24: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='plugins/fontawesome-free/css/all.min.css') }}">
+
+    <style>
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.15); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .badge-pulse { animation: pulse-ring 1s ease-in-out infinite; }
+
+        .timeline { position: relative; padding-left: 2.5rem; }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0.75rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e2e8f0;
+        }
+
+        .timeline-icon {
+            position: absolute;
+            left: 0;
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            color: white;
+        }
+
+        .timeline-entry {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .timeline-body {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            margin-left: 0.5rem;
+        }
+
+        .nav-active {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.35);
+        }
+
+        .nav-active i { color: white !important; }
+
+        #sidebar,
+        #main-layout,
+        #mobile-menu-icon,
+        #desktop-menu-icon {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #sidebar-overlay {
+            transition: opacity 0.3s ease;
+        }
+
+        @media (min-width: 1024px) {
+            body:not(.desktop-sidebar-hidden) #sidebar {
+                transform: translateX(0);
+            }
+
+            body:not(.desktop-sidebar-hidden) #main-layout {
+                margin-left: 16rem;
+            }
+
+            body.desktop-sidebar-hidden #sidebar {
+                transform: translateX(-100%);
+            }
+
+            body.desktop-sidebar-hidden #main-layout {
+                margin-left: 0;
+            }
+
+            body.desktop-sidebar-hidden #desktop-menu-icon {
+                transform: rotate(180deg);
+            }
+        }
+
+        #toast-container {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(120%); opacity: 0; }
+        }
+
+        .toast-enter { animation: slideIn 0.35s ease forwards; }
+        .toast-exit { animation: slideOut 0.35s ease forwards; }
+    </style>
+</head>
+
+<body class="bg-slate-50 font-sans antialiased min-h-screen">
+<div class="flex h-screen overflow-hidden">
+
+    <aside id="sidebar"
+           class="fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-slate-200 flex flex-col shadow-xl -translate-x-full lg:translate-x-0">
+        <div class="flex items-center justify-between gap-3 px-6 py-5 border-b border-slate-100">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-k24-600 to-k24-800 flex items-center justify-center shadow-lg flex-shrink-0">
+                    <i class="fas fa-pills text-white text-base"></i>
+                </div>
+                <div>
+                    <p class="font-bold text-slate-800 leading-tight">Apotek K24</p>
+                    <p class="text-xs text-slate-400">WA Monitor</p>
+                </div>
+            </div>
+
+            <button type="button"
+                    onclick="closeSidebar()"
+                    class="lg:hidden p-2 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-all"
+                    aria-label="Tutup sidebar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <nav class="flex-1 px-4 py-5 space-y-1 overflow-y-auto">
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest px-3 mb-3">Menu</p>
+
+            <a href="/"
+               class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-k24-50 hover:text-k24-700 font-medium transition-all duration-200 group">
+                <i class="fas fa-tachometer-alt w-5 text-center text-slate-400 group-hover:text-k24-600 transition-colors"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="/messages/queue"
+               class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-k24-50 hover:text-k24-700 font-medium transition-all duration-200 group">
+                <i class="fas fa-list w-5 text-center text-slate-400 group-hover:text-k24-600 transition-colors"></i>
+                <span>Antrean Pesan</span>
+            </a>
+        </nav>
+
+        <div class="px-4 py-3 border-t border-slate-100">
+            <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50">
+                <span id="sse-dot" class="w-2 h-2 rounded-full bg-slate-300 flex-shrink-0"></span>
+                <span id="sse-label" class="text-xs text-slate-400">Menghubungkan...</span>
+            </div>
+        </div>
+
+        <div class="px-4 py-3 border-t border-slate-100">
+            <p class="text-xs text-slate-400 text-center">K24 Kalibutuh &copy; 2026</p>
+        </div>
+    </aside>
+
+    <div id="sidebar-overlay"
+         class="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden hidden"
+         onclick="closeSidebar()">
+    </div>
+
+    <div id="main-layout" class="flex flex-1 flex-col min-w-0 overflow-hidden">
+
+        <header class="bg-white border-b border-slate-200 shadow-sm z-30 flex-shrink-0">
+            <div class="flex items-center justify-between px-4 sm:px-6 h-16">
+                <div class="flex items-center gap-4">
+                    <button type="button"
+                            onclick="toggleSidebar()"
+                            class="lg:hidden p-2 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-all"
+                            aria-label="Buka atau tutup sidebar">
+                        <i id="mobile-menu-icon" class="fas fa-bars text-lg"></i>
+                    </button>
+
+                    <button id="desktop-sidebar-toggle"
+                            type="button"
+                            onclick="toggleDesktopSidebarVisibility()"
+                            class="hidden lg:inline-flex items-center justify-center p-2 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-all"
+                            title="Tampilkan atau sembunyikan sidebar"
+                            aria-label="Tampilkan atau sembunyikan sidebar">
+                        <i id="desktop-menu-icon" class="fas fa-bars text-lg"></i>
+                    </button>
+
+                    <h1 class="text-lg sm:text-xl font-bold text-slate-800 leading-tight">
+                        {% block page_title %}Dashboard{% endblock %}
+                    </h1>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <a href="/messages/queue"
+                       class="relative p-2.5 rounded-xl hover:bg-amber-50 text-amber-500 hover:text-amber-600 transition-all">
+                        <i class="fas fa-bell text-lg"></i>
+                        <span id="urgent-badge"
+                              class="absolute -top-1 -right-1 min-w-[1.25rem] h-5 px-1 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-md">
+                            0
+                        </span>
+                    </a>
+
+                    <div class="w-px h-6 bg-slate-200 mx-1"></div>
+
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-k24-500 to-k24-800 flex items-center justify-center shadow">
+                            <i class="fas fa-user text-white text-sm"></i>
+                        </div>
+                        <div class="hidden sm:block">
+                            <p class="text-sm font-medium text-slate-700">Admin</p>
+                            <p class="text-xs text-slate-400">{{ session.get('user_email', 'Admin') }}</p>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="/logout" class="ml-1">
+                        <button type="submit"
+                                class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-100 hover:text-slate-800">
+                            <i class="fas fa-arrow-right-from-bracket text-xs"></i>
+                            <span class="hidden sm:inline">Logout</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer class="flex-shrink-0 bg-white border-t border-slate-100 px-6 py-3">
+            <p class="text-center text-xs text-slate-400">
+                <strong class="text-slate-500">Apotek K24 Kalibutuh</strong>
+                &mdash; Sistem Klasifikasi Urgensi WhatsApp
+            </p>
+        </footer>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+
+<script src="{{ url_for('static', filename='plugins/jquery/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/notification.js') }}"></script>
+
+<script>
+    function isDesktop() {
+        return window.innerWidth >= 1024;
+    }
+
+    function openSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const icon = document.getElementById('mobile-menu-icon');
+
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden');
+
+        if (icon) {
+            icon.classList.remove('fa-bars');
+            icon.classList.add('fa-times');
+        }
+    }
+
+    function closeSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const icon = document.getElementById('mobile-menu-icon');
+
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+
+        if (icon) {
+            icon.classList.remove('fa-times');
+            icon.classList.add('fa-bars');
+        }
+    }
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+
+        if (sidebar.classList.contains('-translate-x-full')) {
+            openSidebar();
+        } else {
+            closeSidebar();
+        }
+    }
+
+    function toggleDesktopSidebarVisibility() {
+        const isHidden = document.body.classList.toggle('desktop-sidebar-hidden');
+        localStorage.setItem('k24-desktop-sidebar-hidden', isHidden ? '1' : '0');
+    }
+
+    function syncSidebarByScreenSize() {
+        const overlay = document.getElementById('sidebar-overlay');
+        const icon = document.getElementById('mobile-menu-icon');
+
+        if (isDesktop()) {
+            overlay.classList.add('hidden');
+            if (icon) {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+
+            if (localStorage.getItem('k24-desktop-sidebar-hidden') === '1') {
+                document.body.classList.add('desktop-sidebar-hidden');
+            } else {
+                document.body.classList.remove('desktop-sidebar-hidden');
+            }
+        } else {
+            document.body.classList.remove('desktop-sidebar-hidden');
+            closeSidebar();
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        syncSidebarByScreenSize();
+
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if (link.getAttribute('href') === window.location.pathname) {
+                link.classList.add('nav-active');
+            }
+
+            link.addEventListener('click', function () {
+                if (!isDesktop()) {
+                    closeSidebar();
+                }
+            });
+        });
+    });
+
+    window.addEventListener('resize', syncSidebarByScreenSize);
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && !isDesktop()) {
+            closeSidebar();
+        }
+    });
+
+    function showToast({ type = 'success', title, body, duration = 4000 }) {
+        const colors = {
+            success: 'bg-emerald-500',
+            danger: 'bg-red-500',
+            warning: 'bg-amber-500',
+            info: 'bg-blue-500',
+        };
+
+        const icons = {
+            success: 'fa-check-circle',
+            danger: 'fa-exclamation-circle',
+            warning: 'fa-exclamation-triangle',
+            info: 'fa-info-circle',
+        };
+
+        const id = 'toast-' + Date.now();
+        const toast = document.createElement('div');
+        toast.id = id;
+        toast.className = 'toast-enter flex items-start gap-3 min-w-[280px] max-w-sm bg-white rounded-2xl shadow-xl border border-slate-100 p-4';
+        toast.innerHTML = `
+            <div class="w-9 h-9 rounded-xl ${colors[type]} flex-shrink-0 flex items-center justify-center">
+                <i class="fas ${icons[type]} text-white text-sm"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="font-semibold text-slate-800 text-sm">${title}</p>
+                ${body ? `<p class="text-xs text-slate-500 mt-0.5">${body}</p>` : ''}
+            </div>
+            <button onclick="dismissToast('${id}')" class="text-slate-300 hover:text-slate-500 transition-colors flex-shrink-0">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        `;
+
+        document.getElementById('toast-container').appendChild(toast);
+
+        if (duration > 0) {
+            setTimeout(() => dismissToast(id), duration);
+        }
+    }
+
+    function dismissToast(id) {
+        const el = document.getElementById(id);
+        if (!el) return;
+
+        el.classList.replace('toast-enter', 'toast-exit');
+        setTimeout(() => el.remove(), 350);
+    }
+
+    let _sseSource = null;
+    let _sseRetryCount = 0;
+    const _sseMaxRetry = 5;
+
+    function connectSSE() {
+        if (!('EventSource' in window)) {
+            console.warn('[SSE] EventSource tidak didukung browser ini, fallback ke polling');
+            if (typeof urgentNotifier !== 'undefined' && urgentNotifier) {
+                urgentNotifier.start(true);
+            }
+            return;
+        }
+
+        _sseSource = new EventSource('/api/stream');
+
+        _sseSource.onopen = function () {
+            _sseRetryCount = 0;
+            console.log('[SSE] Connected ✅');
+            setSseStatus(true);
+
+            if (typeof urgentNotifier !== 'undefined' && urgentNotifier) {
+                urgentNotifier.start(false);
+            }
+        };
+
+        _sseSource.addEventListener('new_message', function (e) {
+            const data = JSON.parse(e.data);
+            console.log('[SSE] new_message:', data);
+
+            if (data.intent === 'urgent' && typeof urgentNotifier !== 'undefined' && urgentNotifier) {
+                urgentNotifier.handleUrgentEvent({
+                    count: data.count,
+                    preview: data.preview,
+                    customer_name: data.customer_name,
+                    messages: [{
+                        message_text: data.preview,
+                        customer: { name: data.customer_name }
+                    }]
+                });
+            }
+
+            if (typeof window.onSSEMessage === 'function') {
+                window.onSSEMessage('new_message', data);
+            }
+        });
+
+        _sseSource.addEventListener('status_changed', function (e) {
+            const data = JSON.parse(e.data);
+            console.log('[SSE] status_changed:', data);
+
+            if (typeof window.onSSEMessage === 'function') {
+                window.onSSEMessage('status_changed', data);
+            }
+        });
+
+        _sseSource.onerror = function () {
+            setSseStatus(false);
+
+            if (_sseSource) {
+                _sseSource.close();
+            }
+
+            _sseRetryCount++;
+
+            if (_sseRetryCount >= _sseMaxRetry) {
+                console.warn('[SSE] Max retry reached, fallback ke polling');
+
+                if (typeof urgentNotifier !== 'undefined' && urgentNotifier) {
+                    urgentNotifier.start(true);
+                }
+
+                return;
+            }
+
+            const delay = Math.min(1000 * Math.pow(2, _sseRetryCount), 30000);
+            console.warn(`[SSE] Disconnected, retry ke-${_sseRetryCount} dalam ${delay / 1000}s...`);
+            setTimeout(connectSSE, delay);
+        };
+    }
+
+    function setSseStatus(connected) {
+        const dot = document.getElementById('sse-dot');
+        const label = document.getElementById('sse-label');
+
+        if (!dot || !label) return;
+
+        if (connected) {
+            dot.className = 'w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0';
+            label.className = 'text-xs text-emerald-600';
+            label.textContent = 'Real-time aktif';
+        } else {
+            dot.className = 'w-2 h-2 rounded-full bg-red-400 flex-shrink-0';
+            label.className = 'text-xs text-red-500';
+            label.textContent = 'Menghubungkan ulang...';
+        }
+    }
+
+    $(document).ready(function () {
+        connectSSE();
+    });
+</script>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>
